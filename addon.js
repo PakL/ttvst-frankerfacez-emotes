@@ -11,16 +11,24 @@ class FrankerFaceZEmotes {
 		this._tool = tool
 
 		this.emoticonDrawer = null
+		this.globalEmotes = {}
 		this.channelEmotes = {}
 
 		this._tool.on('load', async () => {
 			self.emoticonDrawer = document.querySelector('#chat_message_emotes_emoticons')
+			try {
+				self.globalEmotes = await self.loadEmotes()
+			} catch(e) {
+				console.error(e);
+			}
 		})
 		this._tool.cockpit.on('channelopen', async () => {
 			self.channelEmotes = {}
 			try {
 				self.channelEmotes = await self.loadEmotes(self._tool.cockpit.openChannelObject.login)
-			} catch(e) {}
+			} catch(e) {
+				console.error(e);
+			}
 			self.fillInEmotes()
 		})
 	}
@@ -28,11 +36,10 @@ class FrankerFaceZEmotes {
 	loadEmotes(channel)
 	{
 		if(typeof(channel) !== 'string') channel = ''
-		if(channel.length <= 0) reject(new Error('Channel name is empty'))
 		return new Promise((resolve, reject) => {
 			request({
 				method: 'GET',
-				uri: 'https://api.frankerfacez.com/v1/room/' + encodeURIComponent(channel),
+				uri: (channel.length > 0 ? 'https://api.frankerfacez.com/v1/room/' + encodeURIComponent(channel) : 'https://api.frankerfacez.com/v1/set/global'),
 				json: true
 			}, (error, response, body) => {
 				if(error) {
@@ -41,7 +48,7 @@ class FrankerFaceZEmotes {
 					if(response.statusCode !== 200) {
 						reject(new Error(response.statusCode + ' - ' + response.statusMessage))
 					} else {
-						if(typeof(body) == 'object' && body.hasOwnProperty('room') && body.hasOwnProperty('sets')) {
+						if(typeof(body) == 'object' && (body.hasOwnProperty('room') || body.hasOwnProperty('default_sets')) && body.hasOwnProperty('sets')) {
 							resolve(body)
 						} else{
 							reject(new Error('Unexpetected response. Maybe the API has changed?'))
@@ -76,6 +83,30 @@ class FrankerFaceZEmotes {
 
 		let emoteSets = []
 		
+		if(this.globalEmotes.hasOwnProperty('sets') && this.globalEmotes.hasOwnProperty('default_sets')) {
+			for(let esetIndex in this.globalEmotes.sets) {
+				if(!this.globalEmotes.sets.hasOwnProperty(esetIndex)) continue
+				if(this.globalEmotes.default_sets.indexOf(parseInt(esetIndex)) < 0) continue
+
+				let globalEmoteSet = []
+				let eset = this.globalEmotes.sets[esetIndex]
+				for(let emIndex in eset.emoticons) {
+					if(!eset.emoticons.hasOwnProperty(emIndex)) continue
+					let em = eset.emoticons[emIndex]
+					if(em.urls['1'].startsWith('//')) em.urls['1'] = 'https:' + em.urls['1']
+					globalEmoteSet.push({
+						code: em.name,
+						url: em.urls['1']
+					})
+				}
+				if(globalEmoteSet.length > 0) emoteSets.push(globalEmoteSet)
+			}
+		}
+		if(this.emoticonDrawer != null && this.emoticonDrawer.hasOwnProperty('_tag')) {
+			this.emoticonDrawer._tag.setemotes(this.emoticonDrawer._tag.emotes.concat(emoteSets))
+		}
+
+		emoteSets = []
 		if(this.channelEmotes.hasOwnProperty('sets')) {
 			for(let esetIndex in this.channelEmotes.sets) {
 				if(!this.channelEmotes.sets.hasOwnProperty(esetIndex)) continue
