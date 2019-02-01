@@ -132,6 +132,21 @@ class FrankerFaceZEmotes {
 	findAndReplaceInMessage(message) {
 		let replacings = []
 		let emotes = []
+		if(this.globalEmotes.hasOwnProperty('sets')) {
+			for(let esetIndex in this.globalEmotes.sets) {
+				if(!this.globalEmotes.sets.hasOwnProperty(esetIndex)) continue
+				let eset = this.globalEmotes.sets[esetIndex]
+				for(let emIndex in eset.emoticons) {
+					if(!eset.emoticons.hasOwnProperty(emIndex)) continue
+					let em = eset.emoticons[emIndex]
+					if(em.urls['1'].startsWith('//')) em.urls['1'] = 'https:' + em.urls['1']
+					emotes.push({
+						code: em.name,
+						url: em.urls['1']
+					})
+				}
+			}
+		}
 		if(this.channelEmotes.hasOwnProperty('sets')) {
 			for(let esetIndex in this.channelEmotes.sets) {
 				if(!this.channelEmotes.sets.hasOwnProperty(esetIndex)) continue
@@ -163,7 +178,7 @@ class FrankerFaceZEmotes {
 				ni = end+1
 
 				replacings.push({
-					'replaceWith': '<img src="' + e.url + '" srcset="' + e.url + ' 1x, ' + e.url.replace(/\/1$/, '/2') + ' 2x, ' + e.url.replace(/\/1$/, '/4') + ' 4x" alt="{__NEEDLE__}" title="{__NEEDLE__}" class="emote">',
+					'replaceWith': '<img src="' + e.url + '" alt="{__NEEDLE__}" title="{__NEEDLE__}" class="emote">',
 					'start': start,
 					'end': end
 				})
