@@ -1,7 +1,7 @@
 {
 	"name": "frankerfacez-emotes",
 	"description": "Adds FrankerFaceZ emotes and displays them in messages",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"systems": ["win32"],
-	"toolversion": "0.x.x"
+	"toolversion": "1.x.x"
 }

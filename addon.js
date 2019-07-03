@@ -10,18 +10,14 @@ class FrankerFaceZEmotes {
 		const self = this
 		this._tool = tool
 
-		this.emoticonDrawer = null
 		this.globalEmotes = {}
 		this.channelEmotes = {}
+		this.emoticonDrawer = document.querySelector('#chat_message_emotes_emoticons')
 
-		this._tool.on('load', async () => {
-			self.emoticonDrawer = document.querySelector('#chat_message_emotes_emoticons')
-			try {
-				self.globalEmotes = await self.loadEmotes()
-			} catch(e) {
-				console.error(e);
-			}
+		this.loadEmotes().then((emotes) => {
+			self.globalEmotes = emotes 
 		})
+
 		this._tool.cockpit.on('channelopen', async () => {
 			self.channelEmotes = {}
 			try {
